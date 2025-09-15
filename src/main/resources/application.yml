@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8083
 
 logproxy:
   loki-url: http://localhost:3100/loki/api/v1/push
