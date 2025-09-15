@@ -1,25 +1,16 @@
-name: Build, Push Docker Image and Deploy to Ubuntu with Podman
+name: Build, Push and Deploy Logs Service
 
 on:
   push:
     branches:
-      - deploy   # chạy pipeline khi push lên nhánh deploy
+      - deploy-logs   # branch riêng cho logs-service
 
 jobs:
-  build-and-push-image:
+  build-logs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '24'
-
-      - name: Build with Maven
-        run: mvn -B clean package -DskipTests
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -30,18 +21,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image
+      - name: Build and push Logs Service image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./alpha-code-logs-service   # đường dẫn đến source logs-service
           push: true
           tags: norman1910/alpha-code-logs-service:latest
           cache-from: type=registry,ref=norman1910/alpha-code-logs-service:latest
           cache-to: type=inline
 
-  deploy:
-    needs: build-and-push-image
+  deploy-logs:
+    needs: build-logs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -57,11 +47,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy container with podman-compose via SSH
+      - name: Deploy Logs Service with podman-compose via SSH
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << 'EOF'
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << EOF
             set -e
-            cd /home/norman/alpha-code-logs-service
+            cd /home/norman/SEP/alpha-code-logs-service
             echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose down
             echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose pull
             echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose up -d
