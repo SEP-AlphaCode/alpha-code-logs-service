@@ -10,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.util.concurrent.*;
 
 @Service
 public class LogService {
+    private static final Logger logger = LoggerFactory.getLogger(LogService.class);
     private final BlockingQueue<RobotLog> queue;
     private final AppProperties props;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -56,48 +59,60 @@ public class LogService {
     }
 
     public boolean sendToLokiWithRetry(RobotLog log) {
+        logger.info("Attempting to send log to Loki for robot: {}, level: {}", log.getRobotId(), log.getLevel());
+
         for (int i = 0; i < props.getMaxRetries(); i++) {
             try {
                 String lokiPayload = buildLokiPayload(log);
+                logger.debug("Loki payload: {}", lokiPayload);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
                 HttpEntity<String> request = new HttpEntity<>(lokiPayload, headers);
 
-                restTemplate.postForEntity(props.getLokiUrl(), request, String.class);
+                var response = restTemplate.postForEntity(props.getLokiUrl(), request, String.class);
+                logger.info("Successfully sent log to Loki. Response status: {}", response.getStatusCode());
                 return true;
             } catch (Exception e) {
-                e.printStackTrace(); // để log ra lỗi
+                logger.error("Failed to send log to Loki (attempt {}/{}): {}", i + 1, props.getMaxRetries(), e.getMessage(), e);
                 try {
                     Thread.sleep(props.getBaseDelayMs() * (i + 1));
                 } catch (InterruptedException ignored) {}
             }
         }
+        logger.error("Failed to send log to Loki after {} retries. Saving to failed file.", props.getMaxRetries());
         return false;
     }
 
 
     private String buildLokiPayload(RobotLog log) throws IOException {
-        long tsMillis = System.currentTimeMillis();
-        String msg = log.getMessage().replace("\"", "'");
-        return """
+        // Loki expects nanoseconds timestamp
+        long tsNanos = System.currentTimeMillis() * 1_000_000L;
+        String msg = log.getMessage().replace("\"", "\\\"").replace("\n", "\\n");
+
+        String payload = """
         {
           "streams": [
             {
               "stream": { "robot": "%s", "level": "%s" },
-              "values": [ [ "%s", "%s" ] ]
+              "values": [ [ "%d", "%s" ] ]
             }
           ]
         }
-        """.formatted(log.getRobotId(), log.getLevel(), tsMillis, msg);
+        """.formatted(log.getRobotId(), log.getLevel(), tsNanos, msg);
+
+        logger.debug("Built Loki payload for robot {}: {}", log.getRobotId(), payload);
+        return payload;
     }
 
     private void saveToFailedFile(RobotLog log) {
         try (FileWriter fw = new FileWriter(props.getFailedLogFile(), true)) {
-            fw.write(mapper.writeValueAsString(log) + "\n");
+            String logLine = mapper.writeValueAsString(log);
+            fw.write(logLine + "\n");
+            logger.warn("Saved failed log to file: {}", logLine);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Failed to save log to failed file: {}", e.getMessage(), e);
         }
     }
 

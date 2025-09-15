@@ -14,6 +14,13 @@ springdoc:
     display-request-duration: true
     url: ${OPEN_API_SERVERURL:http://localhost:8083}/v1/api-docs
 
+logging:
+  level:
+    com.mineduck1608.alpha.code.alphacodelogsservice: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
 logproxy:
   loki-url: http://loki:3100/loki/api/v1/push  # Loki nội bộ, không public
   queue-size: 10000
