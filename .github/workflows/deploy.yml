@@ -51,8 +51,7 @@ jobs:
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << EOF
             set -e
-            cd /home/norman/SEP/alpha-code-logs-service
-            echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose down
-            echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose pull
-            echo "${{ secrets.SSH_PASS }}" | sudo -S podman-compose up -d
+            cd /home/norman/SEP
+            docker compose pull alpha-logs
+            docker compose up -d alpha-logs
           EOF
