@@ -1,6 +1,12 @@
 server:
   port: 8083
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
 logproxy:
   loki-url: http://localhost:3100/loki/api/v1/push
   queue-size: 10000
