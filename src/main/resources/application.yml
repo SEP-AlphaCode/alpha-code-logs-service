@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+logproxy:
+  loki-url: http://localhost:3100/loki/api/v1/push
+  queue-size: 10000
+  worker-count: 4
+  max-retries: 5
+  base-delay-ms: 1000
+  failed-log-file: failed-logs.jsonl
