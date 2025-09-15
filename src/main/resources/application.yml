@@ -1,14 +1,21 @@
 server:
   port: 8083
+  forward-headers-strategy: native   # để Spring detect X-Forwarded-Proto từ Nginx/Traefik
 
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
   api-docs:
-    path: /v3/api-docs
+    path: /v1/api-docs
+    server:
+      url: ${OPEN_API_SERVERURL:http://localhost:8083}  # dùng biến môi trường, fallback HTTP nội bộ
+  swagger-ui:
+    path: /swagger
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    url: ${OPEN_API_SERVERURL:http://localhost:8083}/v1/api-docs
 
 logproxy:
-  loki-url: http://localhost:3100/loki/api/v1/push
+  loki-url: http://loki:3100/loki/api/v1/push  # Loki nội bộ, không public
   queue-size: 10000
   worker-count: 4
   max-retries: 5
