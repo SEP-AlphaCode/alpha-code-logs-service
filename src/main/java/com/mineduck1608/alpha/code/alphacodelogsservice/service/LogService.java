@@ -79,8 +79,7 @@ public class LogService {
 
 
     private String buildLokiPayload(RobotLog log) throws IOException {
-        long tsMillis = log.getTimestamp() > 0 ? log.getTimestamp() : System.currentTimeMillis();
-        String ts = String.valueOf(tsMillis * 1_000_000); // ns
+        long tsMillis = System.currentTimeMillis();
         String msg = log.getMessage().replace("\"", "'");
         return """
         {
@@ -91,7 +90,7 @@ public class LogService {
             }
           ]
         }
-        """.formatted(log.getRobotId(), log.getLevel(), ts, msg);
+        """.formatted(log.getRobotId(), log.getLevel(), tsMillis, msg);
     }
 
     private void saveToFailedFile(RobotLog log) {
