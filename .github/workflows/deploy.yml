@@ -24,7 +24,7 @@ jobs:
       - name: Build and push Logs Service image
         uses: docker/build-push-action@v6
         with:
-          context: ./alpha-code-logs-service   # đường dẫn đến source logs-service
+          context: .
           push: true
           tags: norman1910/alpha-code-logs-service:latest
           cache-from: type=registry,ref=norman1910/alpha-code-logs-service:latest
