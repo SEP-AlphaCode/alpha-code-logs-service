@@ -3,7 +3,7 @@ name: Build, Push and Deploy Logs Service
 on:
   push:
     branches:
-      - deploy-logs   # branch riêng cho logs-service
+      - deploy # branch riêng cho logs-service
 
 jobs:
   build-logs:
