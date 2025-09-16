@@ -2,9 +2,15 @@ server:
   port: 8083
   forward-headers-strategy: native   # để Spring detect X-Forwarded-Proto từ Nginx/Traefik
 
+open:
+  api:
+    title: Alpha Mini Logs Service
+    version: 1.0.0
+    description: SEP project with AlphaMini API
+    serverUrl: ${OPEN_API_SERVERURL:http://localhost:8081}
+
 springdoc:
   api-docs:
-    path: /v1/api-docs
     server:
       url: ${OPEN_API_SERVERURL:http://localhost:8083}  # dùng biến môi trường, fallback HTTP nội bộ
   swagger-ui:
@@ -12,7 +18,6 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
     display-request-duration: true
-    url: ${OPEN_API_SERVERURL:http://localhost:8083}/v1/api-docs
 
 logging:
   level:
