@@ -7,8 +7,8 @@ import java.util.UUID;
 @Data
 public class RobotLog {
     private String robotId;
-    private UUID organizationId; // UUID format
-    private String level;     // INFO, WARN, ERROR
+    private String level;  // INFO, WARN, ERROR
+    private String tag;
     private String message;
     private long timestamp;
 }

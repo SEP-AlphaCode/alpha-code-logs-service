@@ -95,12 +95,12 @@ public class LogService {
         {
           "streams": [
             {
-              "stream": { "robot": "%s", "level": "%s" },
+              "stream": { "robot": "%s", "level": "%s", "tag": "%s" },
               "values": [ [ "%d", "%s" ] ]
             }
           ]
         }
-        """.formatted(log.getRobotId(), log.getLevel(), tsNanos, msg);
+        """.formatted(log.getRobotId(), log.getLevel(), log.getTag(), tsNanos, msg);
 
         logger.debug("Built Loki payload for robot {}: {}", log.getRobotId(), payload);
         return payload;
