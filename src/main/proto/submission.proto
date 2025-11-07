@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package submission;
+
+service SubmissionService {
+  rpc SubmitRobotLogs (RobotSubmissionRequest) returns (RobotSubmissionResponse);
+}
+
+message RobotSubmissionRequest {
+  string robotId = 1;
+  string accountLessonId = 2;
+  string logDataJson = 3;
+}
+
+message RobotSubmissionResponse {
+  bool success = 1;
+  string message = 2;
+}

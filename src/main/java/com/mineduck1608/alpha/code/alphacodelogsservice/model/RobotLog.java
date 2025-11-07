@@ -11,4 +11,8 @@ public class RobotLog {
     private String tag;
     private String message;
     private long timestamp;
+
+    private UUID accountLessonId; // Bài nộp bài học hiện tại
+    private String type;       // "action", "speech", "emotion", ...
+    private String code;       // "012", "027"...
 }

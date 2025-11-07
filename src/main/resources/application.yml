@@ -33,3 +33,11 @@ logproxy:
   max-retries: 5
   base-delay-ms: 1000
   failed-log-file: failed-logs.jsonl
+
+grpc:
+  client:
+    alpha-course-service:
+      address: static://${GRPC_COURSE_SERVICE_BASE_URL}:${GRPC_COURSE_SERVICE_PORT}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
