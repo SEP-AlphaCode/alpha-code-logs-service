@@ -10,6 +10,7 @@ open:
     serverUrl: ${OPEN_API_SERVERURL:http://localhost:8083}
 
 springdoc:
+  writer-with-order-by-keys: true
   api-docs:
     server:
       url: ${OPEN_API_SERVERURL:http://localhost:8083}  # dùng biến môi trường, fallback HTTP nội bộ
@@ -21,10 +22,10 @@ springdoc:
 
 logging:
   level:
-    com.mineduck1608.alpha.code.alphacodelogsservice: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    org:
+      springdoc: INFO
+      springframework: INFO
+      io: INFO
 
 logproxy:
   loki-url: http://loki:3100/loki/api/v1/push  # Loki nội bộ, không public
