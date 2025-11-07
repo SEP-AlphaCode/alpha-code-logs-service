@@ -1,5 +1,5 @@
 # Stage 1: Build với Maven
-FROM maven:3.9-eclipse-temurin-24-alpine AS build
+FROM maven:3.9-eclipse-temurin-24 AS build
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY src/main/proto ./src/main/proto
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run với Temurin JDK
-FROM eclipse-temurin:24-jdk-alpine
+FROM eclipse-temurin:24-jdk AS runtime
 
 WORKDIR /app
 
