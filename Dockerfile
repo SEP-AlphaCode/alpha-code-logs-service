@@ -4,7 +4,10 @@ FROM maven:3.9-eclipse-temurin-24-alpine AS build
 WORKDIR /app
 
 COPY pom.xml .
+
+# Copy source code
 COPY src ./src
+COPY src/main/proto ./src/main/proto
 
 RUN mvn clean package -DskipTests
 
