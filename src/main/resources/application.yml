@@ -7,7 +7,7 @@ open:
     title: Alpha Mini Logs Service
     version: 1.0.0
     description: SEP project with AlphaMini API
-    serverUrl: ${OPEN_API_SERVERURL:http://localhost:8081}
+    serverUrl: ${OPEN_API_SERVERURL:http://localhost:8083}
 
 springdoc:
   api-docs:

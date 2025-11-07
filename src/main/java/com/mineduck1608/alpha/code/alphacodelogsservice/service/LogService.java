@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.*;
 
-@RequiredArgsConstructor
 @Service
 public class LogService {
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
@@ -35,6 +34,11 @@ public class LogService {
     // Bộ nhớ lưu tạm log cho các submission
     private final ConcurrentMap<String, CopyOnWriteArrayList<RobotLog>> inMemoryLogs = new ConcurrentHashMap<>();
 
+    public LogService(AppProperties props) {
+        this.props = props;
+        this.queue = new LinkedBlockingQueue<>(props.getQueueSize());
+        this.submissionGrpcClient = new SubmissionGrpcClient();
+    }
 
     /** Nhận log từ robot */
     public boolean enqueue(RobotLog log) {
