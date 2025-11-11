@@ -21,39 +21,40 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @Service
+@RequiredArgsConstructor // ✅ Spring sẽ tự tạo constructor đúng
 public class LogService {
+
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
 
-    private final BlockingQueue<RobotLog> queue;
     private final AppProperties props;
+    private final SubmissionGrpcClient submissionGrpcClient;
+
+    private BlockingQueue<RobotLog> queue;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
     private ExecutorService workers;
-    private final SubmissionGrpcClient submissionGrpcClient;
 
-    // Bộ nhớ lưu tạm log cho các submission
     private final ConcurrentMap<String, CopyOnWriteArrayList<RobotLog>> inMemoryLogs = new ConcurrentHashMap<>();
 
-    public LogService(AppProperties props) {
-        this.props = props;
+    @PostConstruct
+    public void init() {
         this.queue = new LinkedBlockingQueue<>(props.getQueueSize());
-        this.submissionGrpcClient = new SubmissionGrpcClient();
     }
 
     /** Nhận log từ robot */
     public boolean enqueue(RobotLog log) {
-        // Chỉ lưu log liên quan đến submission
         if (shouldStoreInMemory(log)) {
-            inMemoryLogs.computeIfAbsent(log.getRobotId(), k -> new CopyOnWriteArrayList<>()).add(log);
+            inMemoryLogs
+                    .computeIfAbsent(log.getRobotId(), k -> new CopyOnWriteArrayList<>())
+                    .add(log);
+
             logger.debug("Stored in memory log for robot {} tag {}", log.getRobotId(), log.getTag());
         }
 
-        // Nếu là log kết thúc submission → gửi toàn bộ qua gRPC
         if ("submission_end".equalsIgnoreCase(log.getTag())) {
             handleSubmissionEnd(log);
         }
 
-        // Dù sao vẫn đẩy log sang Loki
         return queue.offer(log);
     }
 
@@ -72,7 +73,8 @@ public class LogService {
 
         try {
             String logJson = mapper.writeValueAsString(logs);
-            String accountLessonId = log.getAccountLessonId().toString(); // bạn có thể tùy chỉnh parse message
+            String accountLessonId = log.getAccountLessonId().toString();
+
             boolean ok = submissionGrpcClient.submitLogs(log.getRobotId(), accountLessonId, logJson);
 
             if (ok) {
@@ -83,7 +85,6 @@ public class LogService {
         } catch (Exception e) {
             logger.error("Error processing submission_end for {}: {}", log.getRobotId(), e.getMessage(), e);
         } finally {
-            // Dọn bộ nhớ
             inMemoryLogs.remove(log.getRobotId());
         }
     }
@@ -97,16 +98,14 @@ public class LogService {
     }
 
     private void workerLoop() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 RobotLog log = queue.take();
-                boolean success = sendToLokiWithRetry(log);
-                if (!success) {
+                if (!sendToLokiWithRetry(log)) {
                     saveToFailedFile(log);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                break;
             }
         }
     }
@@ -125,6 +124,7 @@ public class LogService {
                 var response = restTemplate.postForEntity(props.getLokiUrl(), request, String.class);
                 logger.debug("Sent log to Loki OK: {}", response.getStatusCode());
                 return true;
+
             } catch (Exception e) {
                 logger.error("Failed to send log to Loki (attempt {}/{}): {}", i + 1, props.getMaxRetries(), e.getMessage());
                 try {
@@ -153,8 +153,7 @@ public class LogService {
 
     private void saveToFailedFile(RobotLog log) {
         try (FileWriter fw = new FileWriter(props.getFailedLogFile(), true)) {
-            String logLine = mapper.writeValueAsString(log);
-            fw.write(logLine + "\n");
+            fw.write(mapper.writeValueAsString(log) + "\n");
         } catch (IOException e) {
             logger.error("Failed to save log to failed file: {}", e.getMessage(), e);
         }
