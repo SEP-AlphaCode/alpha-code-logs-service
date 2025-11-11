@@ -59,9 +59,7 @@ public class LogService {
     }
 
     private boolean shouldStoreInMemory(RobotLog log) {
-        return "submission".equalsIgnoreCase(log.getTag())
-                || "submission_start".equalsIgnoreCase(log.getTag())
-                || "submission_end".equalsIgnoreCase(log.getTag());
+        return "submission".equalsIgnoreCase(log.getTag());
     }
 
     private void handleSubmissionEnd(RobotLog log) {
